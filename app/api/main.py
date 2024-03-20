@@ -21,7 +21,8 @@ def home():
 
 @app.get("/{city}")
 def get_city(city : str):
-    routes = [route for route in data["transport"] if route['city'] == city]
+    
+    routes = [route for route in data["transport"] if route["city"] == city]
     if routes:
         return routes
     else:
