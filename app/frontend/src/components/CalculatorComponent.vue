@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import { TruckIcon, HandCoinsIcon } from 'lucide-vue-next'
+import { TruckIcon, HandCoinsIcon, ClockIcon } from 'lucide-vue-next'
 import CityButton from './CityButton.vue'
 import DateButton from './DateButton.vue'
 import axios from 'axios'
-</script>
-<script lang="ts">
-export default {
-  components: {
-    CityButton,
-    DateButton
-  },
-  data() {
-    return {
-      selectedDate: '',
-      selectedCity: ''
-    }
-  },
-  methods: {
-    updateCity(city: string) {
-      this.selectedCity = city
-      console.log(this.selectedCity)
-    },
-    updateDate(date: string) {
-      this.selectedDate = date
-      console.log(this.selectedDate)
-    },
-    searchTrip() {
-      if (this.selectedCity === "São Paulo"){
-        this.selectedCity = "Sao-Paulo"
-      }
-      axios.get(`http://localhost:8000/${this.selectedCity}`).then((response) => {
-        console.log(response.data)
-      })
-    }
+import { ref } from 'vue'
+
+interface Trip {
+  name: string
+  seat: number
+  duration: string
+  price_confort: number
+}
+
+const selectedCity = ref('')
+const selectedDate = ref('')
+const tripData = ref<Trip[]>([])
+const showModal = ref(false)
+
+const updateCity = (city: string) => {
+  selectedCity.value = city
+}
+
+const updateDate = (date: string) => {
+  selectedDate.value = date
+}
+
+const searchTrip = () => {
+  if (selectedCity.value === '' || selectedDate.value === '') {
+    showModal.value = true
+    return
   }
+  axios.get(`http://localhost:3000/${selectedCity.value}`).then((response) => {
+    const data = response.data
+    tripData.value = data
+  })
 }
 </script>
 
@@ -54,15 +54,13 @@ export default {
             <h1 class="text-gray-900">Destino</h1>
             <CityButton @update-city="updateCity" />
           </div>
-
           <div class="w-full flex flex-col ml-20 mt-8">
             <h1 class="text-gray-900">Data</h1>
             <DateButton @update-date="updateDate" />
           </div>
-
           <div class="w-2/4 m-8 pb-10">
             <button
-              class="bg-cyan-500 text-black w-full h-12 rounded-md mt-8"
+              class="bg-cyan-500 text-black w-full h-12 rounded-md mt-8 drop-shadow-2xl hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
               type="submit"
               @click="searchTrip"
             >
@@ -72,7 +70,65 @@ export default {
         </div>
       </div>
       <div class="flex flex-col justify-center items-center w-1/2 h-full">
-        <h1 class="text-3xl">Nenhum dado selecionado</h1>
+        <h1 v-if="!tripData || tripData.length === 0" class="text-3xl ml-8">
+          Nenhum dado selecionado
+        </h1>
+        <div v-else>
+          <h1 class="text-2xl ml-4 text-center">
+            Essas são as melhores alternativas de viagem para a data selecionada
+          </h1>
+          <div
+            v-for="(trip, index) in tripData"
+            :key="index"
+            class="flex flex-row justify-center mt-4"
+          >
+            <div class="px-8 bg-cyan-500 rounded-l-lg flex flex-col justify-center">
+              <HandCoinsIcon class="w-10 h-10 text-white" />
+            </div>
+            <div class="flex flex-col justify-center items-center bg-gray-100 py-4 px-12 w-72">
+              <h1 class="text-xl font-semibold">{{ trip.name }}</h1>
+              <h1 class="text-md">Poltrona: {{ trip.seat }}</h1>
+              <h1 class="text-md">Tempo Estimado: {{ trip.duration }}</h1>
+            </div>
+            <div
+              class="flex flex-col justify-center items-center ml-2 bg-gray-100 rounded-md p-8 w-48"
+            >
+              <h1 class="font-medium text-lg">Preço</h1>
+              <h1 class="text-lg mt-2">{{ trip.price_confort }}</h1>
+            </div>
+          </div>
+          <div class="flex flex-row justify-end">
+            <button
+              class="bg-yellow-500 text-black w-1/5 h-12 rounded-md mt-8 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+              @click="tripData = []"
+            >
+              Limpar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="showModal"
+    class="fixed z-0 inset-0 flex items-center justify-center shadow-2xl drop-shadow-2xl"
+    aria-labelledby="modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="bg-white rounded-lg px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+      <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Atenção</h3>
+      <div class="mt-2">
+        <p class="text-sm text-gray-500">Por favor, selecione uma cidade e uma data</p>
+      </div>
+      <div class="mt-5 sm:mt-6">
+        <button
+          type="button"
+          @click="showModal = false"
+          class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+        >
+          Fechar
+        </button>
       </div>
     </div>
   </div>
