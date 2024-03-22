@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TruckIcon, HandCoinsIcon, ClockIcon } from 'lucide-vue-next'
+import { TruckIcon, HandCoinsIcon } from 'lucide-vue-next'
 import CityButton from './CityButton.vue'
 import DateButton from './DateButton.vue'
 import axios from 'axios'
