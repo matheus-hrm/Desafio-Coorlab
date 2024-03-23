@@ -21,7 +21,6 @@ def get_root():
 
 @app.get("/{city}")
 def get_city(city : str):
-    city = city if city != "São Paulo" else "SÃ£o Paulo"
     routes = [route for route in data["transport"] if route["city"] == city]
     if routes:
         return routes
