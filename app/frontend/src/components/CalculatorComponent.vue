@@ -1,20 +1,34 @@
 <script setup lang="ts">
-import { TruckIcon, HandCoinsIcon } from 'lucide-vue-next'
+import { TruckIcon, HandCoinsIcon, ClockIcon, AlertTriangleIcon } from 'lucide-vue-next'
 import CityButton from './CityButton.vue'
 import DateButton from './DateButton.vue'
 import axios from 'axios'
 import { ref } from 'vue'
 
-interface Trip {
+interface Trips {
+  cheapest_route: cheapestTrip
+  fastest_route: fastestTrip
+}
+
+interface cheapestTrip {
   name: string
   seat: number
+  duration: string
+  price_econ: number
+}
+
+interface fastestTrip {
+  name: string
+  bed: number
   duration: string
   price_confort: number
 }
 
 const selectedCity = ref('')
 const selectedDate = ref('')
-const tripData = ref<Trip[]>([])
+const tripsData = ref<Trips[]>([])
+const cheapestTripData = ref<cheapestTrip | null>()
+const fastestTripData = ref<fastestTrip | null>()
 const showModal = ref(false)
 
 const updateCity = (city: string) => {
@@ -25,6 +39,11 @@ const updateDate = (date: string) => {
   selectedDate.value = date
 }
 
+const emptyData = () => {
+  cheapestTripData.value = null
+  fastestTripData.value = null
+}
+
 const searchTrip = () => {
   if (selectedCity.value === '' || selectedDate.value === '') {
     showModal.value = true
@@ -32,7 +51,10 @@ const searchTrip = () => {
   }
   axios.get(`http://localhost:3000/${selectedCity.value}`).then((response) => {
     const data = response.data
-    tripData.value = data
+    tripsData.value = data
+    cheapestTripData.value = data.cheapest_route
+    fastestTripData.value = data.fastest_route
+    console.log(data)
   })
 }
 </script>
@@ -70,7 +92,7 @@ const searchTrip = () => {
         </div>
       </div>
       <div class="flex flex-col justify-center items-center w-1/2 h-full">
-        <h1 v-if="!tripData || tripData.length === 0" class="text-3xl ml-8">
+        <h1 v-if="!cheapestTripData && !fastestTripData" class="text-3xl ml-8">
           Nenhum dado selecionado
         </h1>
         <div v-else>
@@ -78,32 +100,49 @@ const searchTrip = () => {
             Essas são as melhores alternativas de viagem para a data selecionada
           </h1>
           <div
-            v-for="(trip, index) in tripData"
-            :key="index"
+            v-if="fastestTripData && fastestTripData.name"
             class="flex flex-row justify-center mt-4"
           >
-            <div class="px-8 bg-cyan-500 rounded-l-lg flex flex-col justify-center">
-              <HandCoinsIcon class="w-10 h-10 text-white" />
+            <div class="px-8 bg-teal-600 rounded-l-lg flex flex-col justify-center">
+              <ClockIcon class="w-10 h-10 text-white" />
             </div>
             <div class="flex flex-col justify-center items-center bg-gray-100 py-4 px-12 w-72">
-              <h1 class="text-xl font-semibold">{{ trip.name }}</h1>
-              <h1 class="text-md">Poltrona: {{ trip.seat }}</h1>
-              <h1 class="text-md">Tempo Estimado: {{ trip.duration }}</h1>
+              <h1 class="text-xl font-semibold">{{ fastestTripData.name }}</h1>
+              <h1 class="text-md">Leito: {{ fastestTripData.bed }}</h1>
+              <h1 class="text-md">Tempo Estimado: {{ fastestTripData.duration }}</h1>
             </div>
             <div
               class="flex flex-col justify-center items-center ml-2 bg-gray-100 rounded-md p-8 w-48"
             >
               <h1 class="font-medium text-lg">Preço</h1>
-              <h1 class="text-lg mt-2">{{ trip.price_confort }}</h1>
+              <h1 class="text-lg mt-2">{{ fastestTripData.price_confort }}</h1>
+            </div>
+          </div>
+          <div v-if="cheapestTripData" class="flex flex-row justify-center mt-4">
+            <div class="px-8 bg-cyan-500 rounded-l-lg flex flex-col justify-center">
+              <HandCoinsIcon class="w-10 h-10 text-white" />
+            </div>
+            <div class="flex flex-col justify-center items-center bg-gray-100 py-4 px-12 w-72">
+              <h1 class="text-xl font-semibold">{{ cheapestTripData.name }}</h1>
+              <h1 class="text-md">Poltrona: {{ cheapestTripData.seat }}</h1>
+              <h1 class="text-md">Tempo Estimado: {{ cheapestTripData.duration }}</h1>
+            </div>
+            <div
+              class="flex flex-col justify-center items-center ml-2 bg-gray-100 rounded-md p-8 w-48"
+            >
+              <h1 class="font-medium text-lg">Preço</h1>
+              <h1 class="text-lg mt-2">{{ cheapestTripData.price_econ }}</h1>
             </div>
           </div>
           <div class="flex flex-row justify-end">
-            <button
-              class="bg-yellow-500 text-black w-1/5 h-12 rounded-md mt-8 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-              @click="tripData = []"
-            >
-              Limpar
-            </button>
+            <div class="flex flex-row justify-end w-full">
+              <button
+                class="bg-yellow-500 text-black w-2/4 h-12 rounded-md mt-8 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                @click="emptyData"
+              >
+                Limpar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -116,10 +155,13 @@ const searchTrip = () => {
     role="dialog"
     aria-modal="true"
   >
-    <div class="bg-white rounded-lg px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+    <div
+      class="bg-white rounded-lg px-4 pt-5 pb-4 sm:p-6 sm:pb-4 flex flex-col justify-center items-center"
+    >
+      <AlertTriangleIcon class="w-10 h-10 text-yellow-500" />
       <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Atenção</h3>
       <div class="mt-2">
-        <p class="text-sm text-gray-500">Por favor, selecione uma cidade e uma data</p>
+        <p class="text-md text-gray-500 text-center">Por favor, selecione uma cidade e uma data</p>
       </div>
       <div class="mt-5 sm:mt-6">
         <button

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, defineEmits } from 'vue'
+import { ref, watch } from 'vue'
 
 const selectedCity = ref('')
+
 const cities = [
   { name: 'Curitiba' },
   { name: 'São Paulo' },
@@ -20,6 +21,7 @@ const emit = defineEmits(['updateCity'])
 watch(() => selectedCity.value, (city) => {
   emit('updateCity', city)
 })
+
 </script>
 
 <template>
