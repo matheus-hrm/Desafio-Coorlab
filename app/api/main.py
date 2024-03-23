@@ -23,7 +23,7 @@ def convert_duration_to_number(duration):
 
 def sort_routes_fastest(route):
     duration = convert_duration_to_number(route["duration"])
-    price_confort = -convert_price_to_number(route["price_confort"])  # negativo para classificar em ordem decrescente
+    price_confort = -convert_price_to_number(route["price_confort"])  
     return (duration, price_confort)
 
 def get_fastest_route(routes):
@@ -34,7 +34,7 @@ def get_fastest_route(routes):
 
 def sort_routes_cheapest(route):
     price_econ = convert_price_to_number(route["price_econ"])
-    duration = convert_duration_to_number(route["duration"])  # negativo para classificar em ordem decrescente
+    duration = convert_duration_to_number(route["duration"])  
     return (price_econ, duration)
 
 def get_cheapest_route(routes):
